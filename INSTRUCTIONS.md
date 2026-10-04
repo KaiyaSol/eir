@@ -2,7 +2,7 @@
 
 Eir is wrapped for native mobile via [Capacitor](https://capacitorjs.com) — the same React/Vite web app in this repo, running inside a native WebView shell, with native platform APIs (like the system browser for OAuth) available where the code uses them. The `ios/` and `android/` native project folders are already generated and committed in this repo — you're building an existing project, not starting Capacitor from scratch.
 
-**Read "Known limitations" at the bottom before you ship anything** — a few features (OAuth's native return trip, background reminder notifications) are not finished, and this section says exactly what's missing.
+**Read "Auth links" and "Known limitations" at the bottom before you ship anything** — they list a required Supabase setting and what still needs real-device testing.
 
 ## Prerequisites
 
@@ -51,32 +51,27 @@ npm run cap:open:android  # opens android/ in Android Studio
 
 `capacitor.config.ts` has `appId` (`com.eirselfhelp.app`, reverse-DNS, part of both stores' bundle identifier) and `appName` ("Eir"). Change either here, then run `npm run cap:sync` — do this **before** you first submit to either store; changing the app id after publishing effectively means shipping as a new, separate app listing.
 
-## Known limitations — not finished, needs a real device to complete
+## Auth links (sign-up, password reset, Google/Apple)
 
-None of the native code changes below have been built, run, or tested — no full Xcode, no Android Studio/SDK, no simulator or device were available in the environment that scaffolded this. Nothing here has been verified on-device.
+On native, Supabase sends people back into the app through the custom URL scheme `com.eirselfhelp.app://auth-callback` (registered in `ios/App/App/Info.plist` and `android/app/src/main/AndroidManifest.xml`). `src/lib/authRedirect.js` builds the redirect URLs, and `src/components/AuthCallbackListener.jsx` turns the incoming link into a Supabase session and opens the right screen (e.g. `/reset-password`).
 
-### 1. OAuth's native return trip
+**Required one-time Supabase setting:** under **Authentication → URL Configuration → Redirect URLs**, add `com.eirselfhelp.app://**`. Without it, Supabase ignores the app's redirect and falls back to the **Site URL**, so email links land on a broken page.
 
-`src/pages/Login.jsx` opens the system browser (via `@capacitor/browser`) for Google/Apple sign-in on native — this part works and is necessary, since both providers block OAuth inside an embedded WebView. What's **not** implemented: after the user approves in the system browser, it needs to redirect back into the app via a custom URL scheme or universal/app link, and the app needs to catch that and turn it into a Supabase session. To finish this:
+The link only opens the app on a device that has Eir installed — someone who signs up on their phone but taps the email on a computer gets an error page and should tap it on their phone instead. Universal Links/App Links would fix that, but need a file hosted on a real domain; not set up.
 
-- Register a custom URL scheme (e.g. `eir://`) in `ios/App/App/Info.plist` (`CFBundleURLTypes`) and `android/app/src/main/AndroidManifest.xml` (an `<intent-filter>` on the main activity).
-- Use `@capacitor/app`'s `App.addListener('appUrlOpen', ...)` (`src/lib/AuthContext.jsx` is the natural place) to catch the callback URL and call the appropriate `supabase.auth` method to exchange it for a session — see Supabase's [Capacitor/React Native OAuth guide](https://supabase.com/docs/guides/auth/quickstarts/react-native) for the exact pattern (deep-linking works the same way across Capacitor and React Native).
-- Add that custom scheme's redirect URL to Supabase's **Authentication → URL Configuration** allow-list.
-- Update `Login.jsx`'s native `redirectTo` (currently `${window.location.origin}/`, a placeholder) to the real custom-scheme URL once one is registered.
+Google/Apple sign-in also needs each provider enabled and configured in Supabase (**Authentication → Providers**); the app side of the return trip is done, but has not been tested against real providers.
 
-### 2. Password reset on native
+## Known limitations
 
-The emailed reset link points at a normal web URL (`https://yourdomain.com/reset-password`) — on a phone, tapping it opens the device's browser, which works (it's a normal web page), just doesn't feel like it's "in the app." Making it open the native app directly needs the same deep-link infrastructure as #1 above (or, more robustly, [Universal Links](https://developer.apple.com/ios/universal-links/)/[App Links](https://developer.android.com/training/app-links) instead of a custom scheme, which avoid a scary "open in Eir?" prompt but need a file hosted on your real domain). Not started.
+### Daily reminder notifications
 
-### 3. Daily reminder notifications
+`src/hooks/useDailyReminder.js` schedules a repeating OS notification via `@capacitor/local-notifications` on native (the browser `Notification` API is used on web only). Tested in the Simulator only as far as building; check the permission prompt and the notification itself on a real device.
 
-`src/hooks/useDailyReminder.js` currently uses the browser's `Notification` API, checked every 30 seconds while the app tab is open. **This does not work as a background reminder on native** — a real notification needs [`@capacitor/local-notifications`](https://capacitorjs.com/docs/apis/local-notifications) (schedule a notification for the chosen time, independent of whether the app is open) instead. Not installed, not rewired — this is a real feature gap on mobile, not just a "needs testing" item.
-
-### 4. App icons and splash screen
+### App icons and splash screen
 
 Capacitor ships a placeholder icon/splash screen in the generated `ios/`/`android/` projects. Use [`@capacitor/assets`](https://github.com/ionic-team/capacitor-assets) (`npx @capacitor/assets generate`) against a source icon/splash image to replace them before shipping — not done here (no source artwork exists yet in this repo beyond `public/favicon.svg`).
 
-### 5. Signing and store submission
+### Signing and store submission
 
 - **iOS**: needs an Apple Developer Program membership ($99/yr) to create the signing certificate and provisioning profile Xcode needs for anything beyond Simulator/personal-device builds, and eventually to submit to TestFlight/App Store.
 - **Android**: needs the signing keystore described above for release builds, and a Google Play Developer account ($25 one-time) to publish.

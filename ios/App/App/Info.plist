@@ -6,6 +6,19 @@
 	<string>$(CAPACITOR_DEBUG)</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Eir uses your location only to find the crisis hotline for your country. It stays on your device.</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>com.eirselfhelp.app</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.eirselfhelp.app</string>
+			</array>
+		</dict>
+	</array>
 	<key>CFBundleDisplayName</key>
 	<string>Eir</string>
 	<key>CFBundleExecutable</key>

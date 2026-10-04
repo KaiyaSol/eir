@@ -1,4 +1,5 @@
 // Global crisis helpline directory + location-aware nearest-hotline lookup.
+import { Geolocation } from '@capacitor/geolocation';
 
 export const CONTINENT_MAP = {
   asia: ['India', 'Japan', 'China', 'Hong Kong', 'South Korea', 'Philippines', 'Singapore', 'Malaysia', 'Thailand', 'Indonesia', 'Pakistan', 'Bangladesh', 'Sri Lanka', 'Nepal', 'Israel', 'Turkey', 'Vietnam', 'Myanmar', 'Cambodia', 'Taiwan'],
@@ -239,38 +240,25 @@ export function getUserLocation() {
 
 // Request the user's country via geolocation + a keyless reverse-geocode lookup.
 // Stores the resolved country and marks the prompt as answered. Rejects on deny/failure.
-export function requestLocationCountry() {
-  return new Promise((resolve, reject) => {
-    if (!navigator.geolocation) {
-      reject(new Error('Geolocation unavailable'));
-      return;
-    }
-    navigator.geolocation.getCurrentPosition(
-      async (pos) => {
-        try {
-          const { latitude, longitude } = pos.coords;
-          // Only the country is ever needed — round to ~11km so the lookup never
-          // receives a precise location.
-          const lat = Math.round(latitude * 10) / 10;
-          const lon = Math.round(longitude * 10) / 10;
-          const res = await fetch(
-            `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`
-          );
-          const data = await res.json();
-          const country = data.countryName || null;
-          if (country) localStorage.setItem(COUNTRY_KEY, country);
-          markLocationAsked();
-          resolve(country);
-        } catch (e) {
-          markLocationAsked();
-          reject(e);
-        }
-      },
-      (err) => {
-        markLocationAsked();
-        reject(err);
-      },
-      { timeout: 10000, enableHighAccuracy: false }
+// Uses the Capacitor plugin so iOS/Android show their native permission prompt
+// (the WebView's navigator.geolocation is denied without one); on web the plugin
+// falls back to navigator.geolocation.
+export async function requestLocationCountry() {
+  try {
+    const pos = await Geolocation.getCurrentPosition({ timeout: 10000, enableHighAccuracy: false });
+    const { latitude, longitude } = pos.coords;
+    // Only the country is ever needed — round to ~11km so the lookup never
+    // receives a precise location.
+    const lat = Math.round(latitude * 10) / 10;
+    const lon = Math.round(longitude * 10) / 10;
+    const res = await fetch(
+      `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`
     );
-  });
+    const data = await res.json();
+    const country = data.countryName || null;
+    if (country) localStorage.setItem(COUNTRY_KEY, country);
+    return country;
+  } finally {
+    markLocationAsked();
+  }
 }

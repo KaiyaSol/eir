@@ -6,6 +6,7 @@ import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import { ThemeProvider } from '@/lib/ThemeContext';
 import AppLayout from '@/components/AppLayout';
+import AuthCallbackListener from '@/components/AuthCallbackListener';
 import Login from '@/pages/Login';
 import ResetPassword from '@/pages/ResetPassword';
 import Home from '@/pages/Home';
@@ -64,6 +65,7 @@ function App() {
       <QueryClientProvider client={queryClientInstance}>
         <ThemeProvider>
           <Router>
+            <AuthCallbackListener />
             <AuthenticatedApp />
           </Router>
           <Toaster />
