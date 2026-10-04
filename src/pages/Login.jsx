@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { supabase } from '@/lib/supabaseClient';
+import { authRedirectUrl } from '@/lib/authRedirect';
 
 export default function Login() {
   const [mode, setMode] = useState('sign_in');
@@ -23,13 +24,17 @@ export default function Login() {
     setInfo('');
     try {
       if (mode === 'sign_up') {
-        const { error: signUpError } = await supabase.auth.signUp({ email, password });
+        const { error: signUpError } = await supabase.auth.signUp({
+          email,
+          password,
+          options: { emailRedirectTo: authRedirectUrl('/') },
+        });
         if (signUpError) throw signUpError;
         setInfo('Check your email to confirm your account, then sign in.');
         setMode('sign_in');
       } else if (mode === 'forgot_password') {
         const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
-          redirectTo: `${window.location.origin}/reset-password`,
+          redirectTo: authRedirectUrl('/reset-password'),
         });
         if (resetError) throw resetError;
         setInfo('If an account exists for that email, a reset link has been sent.');
@@ -50,16 +55,11 @@ export default function Login() {
       if (Capacitor.isNativePlatform()) {
         // Google/Apple block OAuth inside an embedded WebView, so on native we
         // open the system browser instead of redirecting the app's own WebView.
-        // NOTE: this opens the OAuth flow correctly, but the return trip (the
-        // system browser redirecting back into the app via a custom URL scheme
-        // or universal/app link, and exchanging that callback for a session) is
-        // NOT implemented yet — it needs the native URL scheme registered in
-        // Info.plist/AndroidManifest.xml and an `App.addListener('appUrlOpen', ...)`
-        // handler, none of which can be verified without a real device/simulator.
-        // See INSTRUCTIONS.md.
+        // The provider then redirects to the app's custom URL scheme, which
+        // AuthCallbackListener turns into a session.
         const { data, error: oauthError } = await supabase.auth.signInWithOAuth({
           provider,
-          options: { redirectTo: `${window.location.origin}/`, skipBrowserRedirect: true },
+          options: { redirectTo: authRedirectUrl('/'), skipBrowserRedirect: true },
         });
         if (oauthError) throw oauthError;
         if (data?.url) await Browser.open({ url: data.url });
