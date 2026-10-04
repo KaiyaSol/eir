@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { useTheme } from '@/lib/ThemeContext';
 import { Check, User, Trash2, Bell, TrendingUp, BookOpen, ChevronRight, LogOut } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { Capacitor } from '@capacitor/core';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -84,6 +85,8 @@ export default function Settings() {
     } catch (_) {
       // Best-effort — proceed to logout regardless
     }
+    // Also cancels the OS-scheduled reminder on iOS/Android, which clearing storage wouldn't
+    setReminderEnabled(false);
     localStorage.clear();
     await logout();
   };
@@ -202,7 +205,9 @@ export default function Settings() {
           )}
           {permissionDenied && (
             <p className="text-xs text-destructive mt-3">
-              Notifications are blocked. Enable them in your browser settings to receive reminders.
+              {Capacitor.isNativePlatform()
+                ? 'Notifications are turned off for Eir. Turn them on in your phone\'s Settings app to receive reminders.'
+                : 'Notifications are blocked. Enable them in your browser settings to receive reminders.'}
             </p>
           )}
         </motion.div>

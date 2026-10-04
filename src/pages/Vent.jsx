@@ -101,7 +101,7 @@ export default function Vent() {
             placeholder="Whatever you're feeling right now... let it out here."
             value={content}
             onChange={e => setContent(e.target.value)}
-            className="min-h-[100px] resize-none border-none bg-transparent focus-visible:ring-0 text-sm p-0 mb-3"
+            className="min-h-[100px] resize-none border-none bg-transparent focus-visible:ring-0 text-base p-0 mb-3"
           />
           <div className="flex items-center justify-between">
             <p className="text-[10px] text-muted-foreground">Posted privately</p>

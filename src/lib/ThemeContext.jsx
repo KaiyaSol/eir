@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useLayoutEffect } from 'react';
+import { useAuth } from '@/lib/AuthContext';
 
 const ThemeContext = createContext(undefined);
 
@@ -53,24 +54,50 @@ function applyTheme(themeId) {
   root.style.setProperty('--ring',                 theme.hsl);
 }
 
-export function ThemeProvider({ children }) {
-  const [theme, setThemeState] = useState(() => {
-    const saved = localStorage.getItem('app-theme');
-    if (saved) return saved;
-    // No theme chosen yet — default to white and persist it as the starting choice
-    localStorage.setItem('app-theme', 'white');
-    return 'white';
-  });
+const DEFAULT_THEME = 'white';
+// Before themes were saved per user, one device-wide choice lived here
+const LEGACY_KEY = 'app-theme';
+const keyFor = (userId) => `app-theme:${userId}`;
 
-  // Apply theme before paint so a reload never flashes a different colour;
-  // the only thing that changes the theme is an explicit setTheme() call.
+// Signed out → the default theme, so the login screen never shows the last
+// user's colour. Signed in → that user's own saved choice on this device.
+function readSavedTheme(userId) {
+  if (!userId) return DEFAULT_THEME;
+  try {
+    const saved = localStorage.getItem(keyFor(userId));
+    if (saved) return saved;
+    const legacy = localStorage.getItem(LEGACY_KEY);
+    if (legacy) {
+      localStorage.setItem(keyFor(userId), legacy);
+      localStorage.removeItem(LEGACY_KEY);
+      return legacy;
+    }
+  } catch (_) {
+    // Storage unavailable — fall back to the default
+  }
+  return DEFAULT_THEME;
+}
+
+export function ThemeProvider({ children }) {
+  const { user } = useAuth();
+  const userId = user?.id ?? null;
+  const [theme, setThemeState] = useState(() => readSavedTheme(userId));
+
+  // Re-read whenever the signed-in user changes (sign in, sign out, switch user)
+  useLayoutEffect(() => {
+    setThemeState(readSavedTheme(userId));
+  }, [userId]);
+
+  // Apply theme before paint so a reload never flashes a different colour
   useLayoutEffect(() => {
     applyTheme(theme);
   }, [theme]);
 
   const setTheme = (id) => {
     applyTheme(id);
-    localStorage.setItem('app-theme', id);
+    if (userId) {
+      try { localStorage.setItem(keyFor(userId), id); } catch (_) { /* not persisted */ }
+    }
     setThemeState(id);
   };
 

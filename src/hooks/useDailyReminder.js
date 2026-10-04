@@ -1,8 +1,31 @@
 import { useEffect, useRef } from 'react';
+import { Capacitor } from '@capacitor/core';
+import { LocalNotifications } from '@capacitor/local-notifications';
 
 const STORAGE_KEY = 'reminder-enabled';
 const TIME_KEY = 'reminder-time';
 const LAST_KEY = 'reminder-last-sent';
+const NATIVE_REMINDER_ID = 1;
+const REMINDER_TITLE = 'Time to check in 🌿';
+const REMINDER_BODY = 'Log your mood and check your clean streak today.';
+
+// On iOS/Android the browser Notification API doesn't exist, so the reminder is
+// scheduled with the OS instead — it fires daily even when the app is closed.
+const isNative = Capacitor.isNativePlatform();
+
+async function scheduleNativeReminder() {
+  await LocalNotifications.cancel({ notifications: [{ id: NATIVE_REMINDER_ID }] });
+  if (!getReminderEnabled()) return;
+  const [hour, minute] = getReminderTime().split(':').map(Number);
+  await LocalNotifications.schedule({
+    notifications: [{
+      id: NATIVE_REMINDER_ID,
+      title: REMINDER_TITLE,
+      body: REMINDER_BODY,
+      schedule: { on: { hour, minute }, repeats: true, allowWhileIdle: true },
+    }],
+  });
+}
 
 export function getReminderEnabled() {
   return localStorage.getItem(STORAGE_KEY) === '1';
@@ -14,13 +37,19 @@ export function getReminderTime() {
 
 export function setReminderEnabled(enabled) {
   localStorage.setItem(STORAGE_KEY, enabled ? '1' : '0');
+  if (isNative) scheduleNativeReminder().catch(() => {});
 }
 
 export function setReminderTime(time) {
   localStorage.setItem(TIME_KEY, time);
+  if (isNative) scheduleNativeReminder().catch(() => {});
 }
 
 export async function requestNotificationPermission() {
+  if (isNative) {
+    const { display } = await LocalNotifications.requestPermissions();
+    return display === 'granted';
+  }
   if (!('Notification' in window)) return false;
   if (Notification.permission === 'granted') return true;
   const result = await Notification.requestPermission();
@@ -28,13 +57,16 @@ export async function requestNotificationPermission() {
 }
 
 /**
- * Fires a daily reminder notification at the user's chosen time.
+ * Web: fires a daily reminder notification at the user's chosen time.
  * Only triggers while the app is open. Checks every 30s.
+ * Native: the OS-scheduled reminder needs no polling (see scheduleNativeReminder).
  */
 export function useDailyReminder() {
   const intervalRef = useRef(null);
 
   useEffect(() => {
+    if (isNative) return undefined;
+
     const check = () => {
       if (!getReminderEnabled()) return;
       if (!('Notification' in window) || Notification.permission !== 'granted') return;
@@ -54,9 +86,7 @@ export function useDailyReminder() {
       if (now >= reminderTime) {
         localStorage.setItem(LAST_KEY, todayStr);
         try {
-          new Notification('Time to check in 🌿', {
-            body: 'Log your mood and check your clean streak today.',
-          });
+          new Notification(REMINDER_TITLE, { body: REMINDER_BODY });
         } catch (_) {
           // Some browsers require a service worker — silently ignore
         }

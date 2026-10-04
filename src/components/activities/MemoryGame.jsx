@@ -3,7 +3,8 @@ import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { RotateCcw, Flame } from 'lucide-react';
 
-const SYMBOLS = ['★', '♦', '♠', '♥', '◆', '▲', '●', '■'];
+// \uFE0E forces text (not emoji) rendering, so iOS draws the suits in the theme colour
+const SYMBOLS = ['★', '♦\uFE0E', '♠\uFE0E', '♥\uFE0E', '◆', '▲', '●', '■'];
 
 function shuffle(arr) {
   const a = [...arr];
@@ -80,7 +81,7 @@ export default function MemoryGame() {
               key={card.id}
               whileTap={{ scale: 0.95 }}
               onClick={() => handleFlip(card.id)}
-              className={`aspect-square rounded-xl text-2xl flex items-center justify-center transition-all duration-300 font-bold ${
+              className={`aspect-square rounded-xl text-2xl flex items-center justify-center transition-[background-color,border-color,opacity] duration-300 font-bold ${
                 isFlipped
                   ? 'bg-secondary border-2 border-primary/30 text-primary'
                   : 'bg-primary/10 border-2 border-transparent hover:bg-primary/20 text-transparent'
