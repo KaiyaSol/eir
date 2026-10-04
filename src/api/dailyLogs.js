@@ -47,8 +47,3 @@ export async function updateDailyLog(id, data) {
   if (error) throw error;
   return row;
 }
-
-export async function deleteAllDailyLogsForUser(userId) {
-  const { error } = await supabase.from('daily_logs').delete().eq('user_id', userId);
-  if (error) throw error;
-}

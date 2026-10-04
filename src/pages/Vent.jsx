@@ -134,7 +134,7 @@ export default function Vent() {
           </AnimatePresence>
           {vents.length === 0 && (
             <p className="text-center text-sm text-muted-foreground py-8">
-              Be the first to vent. It's safe here.
+              Nothing here yet. Your vents are private — only you can see them.
             </p>
           )}
         </div>

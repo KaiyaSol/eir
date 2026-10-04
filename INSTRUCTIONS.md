@@ -61,15 +61,29 @@ The link only opens the app on a device that has Eir installed — someone who s
 
 Google/Apple sign-in also needs each provider enabled and configured in Supabase (**Authentication → Providers**); the app side of the return trip is done, but has not been tested against real providers.
 
+## App icon and splash screen
+
+Generated with [`@capacitor/assets`](https://github.com/ionic-team/capacitor-assets) from `assets/icon-only.png` and `assets/logo.png` (both the 1024×1024 app icon) on a `#0f101a` background. To change them, replace those files and run:
+
+```bash
+npx @capacitor/assets generate --ios --android --iconBackgroundColor '#0f101a' --iconBackgroundColorDark '#0f101a' --splashBackgroundColor '#0f101a' --splashBackgroundColorDark '#0f101a'
+```
+
+## Minimum iOS version
+
+iOS 17.0 (Xcode's recommended target) — iPhone XS/XR (2018) and newer. Set via `IPHONEOS_DEPLOYMENT_TARGET` in `ios/App/App.xcodeproj/project.pbxproj`.
+
 ## Known limitations
 
 ### Daily reminder notifications
 
 `src/hooks/useDailyReminder.js` schedules a repeating OS notification via `@capacitor/local-notifications` on native (the browser `Notification` API is used on web only). Tested in the Simulator only as far as building; check the permission prompt and the notification itself on a real device.
 
-### App icons and splash screen
+### Account deletion
 
-Capacitor ships a placeholder icon/splash screen in the generated `ios/`/`android/` projects. Use [`@capacitor/assets`](https://github.com/ionic-team/capacitor-assets) (`npx @capacitor/assets generate`) against a source icon/splash image to replace them before shipping — not done here (no source artwork exists yet in this repo beyond `public/favicon.svg`).
+Settings → Delete Account calls the `delete_own_account()` database function (`supabase/migrations/0002_delete_own_account.sql`, already applied to the live project), which deletes the user's auth account; the profile, daily logs and vents go with it via `on delete cascade`. Not yet tested end-to-end on a device — Apple's reviewers will try it, so test it with a throwaway account before submitting.
+
+Not implemented: for accounts created with Sign in with Apple, Apple asks apps to revoke the user's Apple tokens on deletion (via Apple's REST API). Supabase doesn't do this automatically.
 
 ### Signing and store submission
 

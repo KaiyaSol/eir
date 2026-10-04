@@ -18,8 +18,7 @@ import {
   AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { useAuth } from '@/lib/AuthContext';
-import { deleteAllDailyLogsForUser } from '@/api/dailyLogs';
-import { deleteAllVentsForUser } from '@/api/vents';
+import { deleteOwnAccount } from '@/api/account';
 import { toast } from '@/components/ui/use-toast';
 
 export default function Settings() {
@@ -76,14 +75,17 @@ export default function Settings() {
   const handleDeleteAccount = async () => {
     setDeleting(true);
     try {
-      if (user?.id) {
-        await Promise.all([
-          deleteAllDailyLogsForUser(user.id),
-          deleteAllVentsForUser(user.id),
-        ]);
-      }
-    } catch (_) {
-      // Best-effort — proceed to logout regardless
+      await deleteOwnAccount();
+    } catch (error) {
+      // Don't sign out on failure — the account still exists, so say so
+      console.error('Failed to delete account', error);
+      setDeleting(false);
+      toast({
+        title: "Couldn't delete your account",
+        description: 'Nothing was deleted. Please check your connection and try again.',
+        variant: 'destructive',
+      });
+      return;
     }
     // Also cancels the OS-scheduled reminder on iOS/Android, which clearing storage wouldn't
     setReminderEnabled(false);
@@ -243,7 +245,7 @@ export default function Settings() {
                   {deleting ? 'Deleting...' : 'Delete Account'}
                 </Button>
                 <p className="text-xs text-muted-foreground">
-                  Permanently deletes your journal entries, logs, and vents. This cannot be undone.
+                  Permanently deletes your account and everything in it. This cannot be undone.
                 </p>
               </div>
             </AlertDialogTrigger>
@@ -251,7 +253,7 @@ export default function Settings() {
               <AlertDialogHeader>
                 <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                 <AlertDialogDescription>
-                  This will permanently delete all your journal entries, logs, and vents — this cannot be undone. Your account and login are not deleted, so you could sign back in later to an empty account. To have your account itself removed, contact us at Contact@eirselfhelp.com.
+                  This will permanently delete your account, along with all your journal entries, logs, and vents. You won't be able to sign in to it again, and this cannot be undone.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>

@@ -20,8 +20,3 @@ export async function createVent(data) {
   if (error) throw error;
   return row;
 }
-
-export async function deleteAllVentsForUser(userId) {
-  const { error } = await supabase.from('vents').delete().eq('user_id', userId);
-  if (error) throw error;
-}
