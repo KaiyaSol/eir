@@ -43,8 +43,8 @@ export default function LocationPrompt({ onComplete }) {
         <h2 className="text-xl font-bold text-foreground mb-3">One tap to help</h2>
         <p className="text-sm text-muted-foreground leading-relaxed mb-8">
           If you ever need urgent support, Eir can call the crisis hotline nearest you with a single tap.
-          Sharing your location (just your country) lets us find the right number. We don't track or store it
-          anywhere — it stays on your device.
+          To find your country, your approximate location (rounded to about 11 km) is checked once with a
+          location lookup service. Only your country is kept, on this device — we never store or track where you are.
         </p>
         <div className="flex flex-col gap-3">
           <Button

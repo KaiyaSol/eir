@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { CalendarDays, Sparkles, MessageCircle, Phone, Palette, ChevronRight, X } from 'lucide-react';
+import { Leaf, CalendarDays, Sparkles, MessageCircle, Phone, Palette, Heart, ChevronRight, X } from 'lucide-react';
 
 const STEPS = [
   {
-    icon: <span className="text-5xl">🌿</span>,
+    icon: <Leaf className="w-12 h-12 text-primary" />,
     title: 'Welcome',
     description: "This is your safe space. A private app designed to help you track how you're feeling, find healthy outlets, and reach out when things get hard.",
   },
@@ -22,7 +22,7 @@ const STEPS = [
   {
     icon: <MessageCircle className="w-12 h-12 text-primary" />,
     title: 'Vent',
-    description: "Need to get something off your chest? Post anonymously. No judgment — just a space to let it out and feel less alone.",
+    description: "Need to get something off your chest? Write it out here. No judgment — your vents are private, and only you can see them.",
   },
   {
     icon: <Phone className="w-12 h-12 text-primary" />,
@@ -35,7 +35,7 @@ const STEPS = [
     description: 'Customise your accent colour, set your name, and manage your account here.',
   },
   {
-    icon: <span className="text-5xl">💙</span>,
+    icon: <Heart className="w-12 h-12 text-primary" />,
     title: "You're all set",
     description: "Remember: you don't have to be okay all the time, and you don't have to go through this alone. This app is here for you.",
   },
