@@ -1,4 +1,5 @@
 import UIKit
+import UserNotifications
 import Capacitor
 
 class SceneDelegate: UIResponder, UIWindowSceneDelegate {
@@ -12,6 +13,11 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         window?.makeKeyAndVisible()
 
         SceneDelegateProxy.shared.scene(scene, willConnectTo: session, options: connectionOptions)
+    }
+
+    func sceneDidBecomeActive(_ scene: UIScene) {
+        // Clear the daily-reminder badge (set in src/hooks/useDailyReminder.js) once the app is opened
+        UNUserNotificationCenter.current().setBadgeCount(0)
     }
 
     func scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) {

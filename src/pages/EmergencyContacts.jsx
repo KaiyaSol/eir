@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Input } from '@/components/ui/input';
-import { Phone, Globe, Search, Lightbulb, MapPin } from 'lucide-react';
+import { Phone, MessageSquare, Globe, Search, Lightbulb, MapPin } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import {
   CONTACTS, CONTINENT_MAP, CONTINENT_ALIASES,
   getStoredCountry, getNearestHotline, requestLocationCountry, getUserLocation,
+  contactHref, isTextLine, dialHint,
 } from '@/lib/crisisContacts';
 
 export default function EmergencyContacts() {
@@ -71,9 +72,13 @@ export default function EmergencyContacts() {
       setCalling(false);
     }
     const found = getNearestHotline(country);
-    if (found && found.number && /\d/.test(found.number)) {
+    const href = found && contactHref(found.number);
+    if (href) {
       setHotline(found);
-      window.location.href = `tel:${found.number.replace(/[^0-9+]/g, '')}`;
+      window.location.href = href;
+    } else if (found && dialHint(found.number)) {
+      // e.g. Chile's *4141 — the phone won't dial it from a link
+      setCallError(`${found.name}: ${dialHint(found.number)}.`);
     } else {
       setCallError("We couldn't find a hotline for your location. Browse the list below.");
     }
@@ -176,14 +181,25 @@ export default function EmergencyContacts() {
                     className="bg-card rounded-xl p-3 border border-border/50 shadow-sm"
                   >
                     <p className="text-sm font-semibold text-foreground">{c.name}</p>
-                    {c.number && (
-                      <a
-                        href={`tel:${c.number.replace(/[^0-9+]/g, '')}`}
-                        className="flex items-center gap-1.5 text-primary text-sm mt-1 font-medium"
-                      >
+                    {c.number && !contactHref(c.number) && (
+                      <p className="flex items-center gap-1.5 text-primary text-sm mt-1 font-medium select-all">
                         <Phone className="w-3.5 h-3.5" />
                         {c.number}
+                      </p>
+                    )}
+                    {contactHref(c.number) && (
+                      <a
+                        href={contactHref(c.number)}
+                        className="flex items-center gap-1.5 text-primary text-sm mt-1 font-medium"
+                      >
+                        {isTextLine(c.number)
+                          ? <MessageSquare className="w-3.5 h-3.5" />
+                          : <Phone className="w-3.5 h-3.5" />}
+                        {c.number}
                       </a>
+                    )}
+                    {dialHint(c.number) && (
+                      <p className="text-xs text-muted-foreground mt-0.5">{dialHint(c.number)}</p>
                     )}
                     {c.website && (
                       <a

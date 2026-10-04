@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
-import { Plus } from 'lucide-react';
+import { Plus, X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 
 const MOOD_OPTIONS = [
@@ -154,6 +154,18 @@ export default function DailyLogModal({ open, onClose, date, existingLog, onSave
                   onClick={() => toggleAlternative(alt)}
                 >
                   {alt}
+                </Badge>
+              ))}
+              {/* The user's own additions — selected by definition; tap to remove */}
+              {alternatives.filter(alt => !ALTERNATIVE_SUGGESTIONS.includes(alt)).map(alt => (
+                <Badge
+                  key={alt}
+                  variant="default"
+                  className="cursor-pointer text-xs py-1 px-2.5 transition-all gap-1"
+                  onClick={() => toggleAlternative(alt)}
+                >
+                  {alt}
+                  <X className="w-3 h-3" />
                 </Badge>
               ))}
             </div>

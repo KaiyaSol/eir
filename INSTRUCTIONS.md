@@ -77,11 +77,11 @@ iOS 17.0 (Xcode's recommended target) — iPhone XS/XR (2018) and newer. Set via
 
 ### Daily reminder notifications
 
-`src/hooks/useDailyReminder.js` schedules a repeating OS notification via `@capacitor/local-notifications` on native (the browser `Notification` API is used on web only). Tested in the Simulator only as far as building; check the permission prompt and the notification itself on a real device.
+`src/hooks/useDailyReminder.js` schedules a repeating OS notification via `@capacitor/local-notifications` on native (the browser `Notification` API is used on web only). Each reminder sets the app icon badge to 1; `ios/App/App/SceneDelegate.swift` clears it when the app becomes active. Permission prompt and delivery tested on a real iPhone (October 2026); the badge change still needs a device check.
 
 ### Account deletion
 
-Settings → Delete Account calls the `delete_own_account()` database function (`supabase/migrations/0002_delete_own_account.sql`, already applied to the live project), which deletes the user's auth account; the profile, daily logs and vents go with it via `on delete cascade`. Not yet tested end-to-end on a device — Apple's reviewers will try it, so test it with a throwaway account before submitting.
+Settings → Delete Account calls the `delete_own_account()` database function (`supabase/migrations/0003_delete_own_account.sql`, already applied to the live project), which deletes the user's auth account; the profile, daily logs and vents go with it via `on delete cascade`. Tested end-to-end on a real iPhone (October 2026).
 
 Not implemented: for accounts created with Sign in with Apple, Apple asks apps to revoke the user's Apple tokens on deletion (via Apple's REST API). Supabase doesn't do this automatically.
 

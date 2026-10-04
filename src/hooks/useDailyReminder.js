@@ -22,6 +22,8 @@ async function scheduleNativeReminder() {
       id: NATIVE_REMINDER_ID,
       title: REMINDER_TITLE,
       body: REMINDER_BODY,
+      // Shows a 1 on the app icon; SceneDelegate clears it when the app opens
+      badge: 1,
       schedule: { on: { hour, minute }, repeats: true, allowWhileIdle: true },
     }],
   });
@@ -65,7 +67,12 @@ export function useDailyReminder() {
   const intervalRef = useRef(null);
 
   useEffect(() => {
-    if (isNative) return undefined;
+    if (isNative) {
+      // Re-schedule on launch so reminders set up by an older version of the
+      // app pick up changes to the notification (e.g. the badge)
+      scheduleNativeReminder().catch(() => {});
+      return undefined;
+    }
 
     const check = () => {
       if (!getReminderEnabled()) return;
