@@ -37,6 +37,8 @@
 	<false/>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>Eir only uses your approximate location while you're using the app, once, to find the crisis hotline for your country. Only your country is saved, on this device.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Eir uses your approximate location once to find the crisis hotline for your country. Only your country is saved, on this device.</string>
 	<key>UIApplicationSceneManifest</key>
