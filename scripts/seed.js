@@ -22,12 +22,25 @@ const supabase = createClient(SUPABASE_URL, SECRET_KEY, {
   auth: { autoRefreshToken: false, persistSession: false },
 });
 
-const MOODS = [10, 11, 13, 19, 5, 4, 8];
-const ALTERNATIVES = ['Went for a walk', 'Deep breathing', 'Called a friend', 'Journaled'];
-
-function randomFrom(arr) {
-  return arr[Math.floor(Math.random() * arr.length)];
-}
+// Two weeks of realistic, gentle sample entries (most recent first) — good enough
+// for App Store screenshots and the App Review demo account. Mood values match
+// the MOODS list in src/components/calendar/DailyLogModal.jsx.
+const SAMPLE_DAYS = [
+  { moods: [14, 11], journal: 'Slept well for the first time in a while. Sat outside with my tea this morning and just noticed the light.', alternatives: ['Went for a walk', 'Listened to music'] },
+  { moods: [13], journal: null, alternatives: ['Deep breathing'] },
+  { moods: [15, 12], journal: 'Called Sam tonight. I didn\'t realise how much I needed to hear a friendly voice.', alternatives: ['Called a friend'] },
+  { moods: [10], journal: null, alternatives: [] },
+  { moods: [22, 10], journal: 'Long day. Tired, but I got through it, and that counts.', alternatives: ['Took a bath'] },
+  { moods: [11], journal: null, alternatives: ['Meditated', 'Journaled'] },
+  { moods: [4, 9], journal: 'Felt anxious before work. Did the box breathing on the bus and it took the edge off.', alternatives: ['Deep breathing'] },
+  { moods: [16], journal: 'Finished the drawing I started last week. Small win, but I\'m proud of it.', alternatives: ['Art or crafts'] },
+  { moods: [8, 5], journal: null, alternatives: ['Listened to music', 'Held ice'] },
+  { moods: [5], journal: 'Quiet day. Missing people. Wrote it all down instead of keeping it in.', alternatives: ['Journaled'] },
+  { moods: [10, 22], journal: null, alternatives: ['Watched a movie'] },
+  { moods: [4], journal: 'Couldn\'t settle tonight. Played the memory game until my head felt quieter.', alternatives: ['Played a game'] },
+  { moods: [8], journal: null, alternatives: ['Went for a walk'] },
+  { moods: [9, 4], journal: 'Starting this journal. Not sure what to write yet — just showing up.', alternatives: [] },
+];
 
 async function findOrCreateUser(email, password) {
   const { data, error } = await supabase.auth.admin.listUsers();
@@ -52,22 +65,22 @@ async function findOrCreateUser(email, password) {
 async function seed() {
   const userId = await findOrCreateUser(targetEmail, providedPassword);
 
-  const dailyLogs = Array.from({ length: 14 }, (_, i) => {
+  const dailyLogs = SAMPLE_DAYS.map((day, i) => {
     const date = new Date();
     date.setDate(date.getDate() - i);
     return {
       user_id: userId,
       date: date.toISOString().slice(0, 10),
-      moods: [randomFrom(MOODS)],
-      self_harmed: Math.random() < 0.1,
-      journal: i % 3 === 0 ? `Sample journal entry for day ${i}.` : null,
-      alternatives_used: Math.random() < 0.4 ? [randomFrom(ALTERNATIVES)] : [],
+      moods: day.moods,
+      self_harmed: false,
+      journal: day.journal,
+      alternatives_used: day.alternatives,
     };
   });
 
   const vents = [
-    { user_id: userId, content: 'Sample vent: today was a rough day.', anonymous_name: 'Anonymous' },
-    { user_id: userId, content: 'Sample vent: feeling a bit better now.', anonymous_name: 'Anonymous' },
+    { user_id: userId, content: 'Everything feels like too much today. I just needed to put it somewhere.', anonymous_name: 'Anonymous' },
+    { user_id: userId, content: 'Better than this morning. Breathing helped more than I expected.', anonymous_name: 'Anonymous' },
   ];
 
   // upsert, not insert: daily_logs has a (user_id, date) uniqueness constraint,
