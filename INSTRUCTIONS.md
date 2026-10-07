@@ -49,7 +49,11 @@ npm run cap:open:android  # opens android/ in Android Studio
 
 ## Updating the app id / name
 
-`capacitor.config.ts` has `appId` (`com.eirselfhelp.app`, reverse-DNS, part of both stores' bundle identifier) and `appName` ("Eir"). Change either here, then run `npm run cap:sync` — do this **before** you first submit to either store; changing the app id after publishing effectively means shipping as a new, separate app listing.
+`capacitor.config.ts` has `appId` (`com.eirselfhelp.app`) and `appName` ("Eir").
+
+**iOS uses a different bundle ID: `com.base6a1e612ad8912d6ceab2f97c.app`** (set as `PRODUCT_BUNDLE_IDENTIFIER` in `ios/App/App.xcodeproj/project.pbxproj`). The App Store Connect listing "Eir - self-help app" was created with that ID by an earlier Base44-built version, and a listing's bundle ID can't be changed — so builds must use it to upload to that listing. Don't change it back. The custom URL scheme (`com.eirselfhelp.app://`) and the Sign in with Apple Services ID (`com.eirselfhelp.app.signin`) are independent of the bundle ID and stay as they are.
+
+The Android `applicationId` is still `com.eirselfhelp.app`; pick the final one before the first Play Store upload, since it can't change after publishing.
 
 ## Auth links (sign-up, password reset, Google/Apple)
 
